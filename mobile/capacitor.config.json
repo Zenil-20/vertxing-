@@ -1,0 +1,9 @@
+{
+  "appId": "com.vertxing.app",
+  "appName": "Vertxing",
+  "webDir": "www",
+  "server": {
+    "url": "https://vertxing-web.vercel.app",
+    "androidScheme": "https"
+  }
+}

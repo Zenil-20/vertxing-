@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "376631644155",
+    "project_id": "vertxing-fd079",
+    "storage_bucket": "vertxing-fd079.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:376631644155:android:4199307e8e5ad681e4055e",
+        "android_client_info": {
+          "package_name": "com.vertxing.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBHWynOsig_X-icPBSknfk7VkJSqR5Tkds"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
