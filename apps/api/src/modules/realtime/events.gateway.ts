@@ -240,16 +240,16 @@ export class EventsGateway
     });
     client.emit(CallEvents.Ringing, { callId: result.callId, calleeId: payload.calleeId });
 
-    // Closed/backgrounded callee (no live socket) → ring via Web Push so the
-    // call reaches them even with the app not running.
-    if (!(await this.calls.isOnline(payload.calleeId))) {
-      await this.push.sendCallNotification(payload.calleeId, {
-        type: 'incoming-call',
-        callId: result.callId,
-        from: { id: user.userId, name: user.name },
-        mode: payload.mode,
-      });
-    }
+    // ALWAYS send a push. A backgrounded PWA keeps a socket the server still sees
+    // as "online", so gating on isOnline would skip the push and the closed app
+    // would never ring. The Service Worker suppresses the notification when the
+    // app is genuinely in the foreground (a visible window exists).
+    await this.push.sendCallNotification(payload.calleeId, {
+      type: 'incoming-call',
+      callId: result.callId,
+      from: { id: user.userId, name: user.name },
+      mode: payload.mode,
+    });
 
     this.scheduleRingTimeout(result.callId);
   }
@@ -323,14 +323,12 @@ export class EventsGateway
       from: { id: user.userId, name: user.name },
       mode: 'AUDIO',
     });
-    if (!(await this.calls.isOnline(payload.calleeId))) {
-      await this.push.sendCallNotification(payload.calleeId, {
-        type: 'incoming-call',
-        callId: result.callId,
-        from: { id: user.userId, name: user.name },
-        mode: 'AUDIO',
-      });
-    }
+    await this.push.sendCallNotification(payload.calleeId, {
+      type: 'incoming-call',
+      callId: result.callId,
+      from: { id: user.userId, name: user.name },
+      mode: 'AUDIO',
+    });
     this.scheduleRingTimeout(result.callId);
   }
 

@@ -12,7 +12,7 @@
  * ---------------------------------------------------------------------------
  */
 
-const CACHE = 'vertxing-shell-v2';
+const CACHE = 'vertxing-shell-v3';
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE).then((c) => c.add('/')).catch(() => undefined));
@@ -53,18 +53,27 @@ self.addEventListener('push', (event) => {
   const title = data.mode === 'VIDEO' ? 'Incoming video call' : 'Incoming call';
 
   event.waitUntil(
-    self.registration.showNotification(title, {
-      body: `${from} is calling…`,
-      tag: `call-${data.callId}`, // collapse duplicate pushes for the same call
-      renotify: true,
-      requireInteraction: true, // keep ringing until the user acts
-      vibrate: [300, 200, 300, 200, 300],
-      data,
-      actions: [
-        { action: 'accept', title: 'Answer' },
-        { action: 'decline', title: 'Decline' },
-      ],
-    }),
+    (async () => {
+      // If the app is genuinely in the FOREGROUND (a visible window), the in-app
+      // call modal handles the ring — don't double-ring with a notification.
+      // Otherwise (backgrounded or fully closed) show the ringing notification.
+      const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+      const foreground = windows.some((c) => c.visibilityState === 'visible');
+      if (foreground) return;
+
+      await self.registration.showNotification(title, {
+        body: `${from} is calling…`,
+        tag: `call-${data.callId}`, // collapse duplicate pushes for the same call
+        renotify: true,
+        requireInteraction: true, // keep ringing until the user acts
+        vibrate: [300, 200, 300, 200, 300],
+        data,
+        actions: [
+          { action: 'accept', title: 'Answer' },
+          { action: 'decline', title: 'Decline' },
+        ],
+      });
+    })(),
   );
 });
 
