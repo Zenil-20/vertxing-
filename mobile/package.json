@@ -1,0 +1,18 @@
+{
+  "name": "vertxing-mobile",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Vertxing — native Android shell (Capacitor) for full-screen incoming calls.",
+  "scripts": {
+    "sync": "cap sync android",
+    "open": "cap open android"
+  },
+  "dependencies": {
+    "@capacitor/android": "^6.2.0",
+    "@capacitor/core": "^6.2.0",
+    "@capacitor/push-notifications": "^6.0.4"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.2.0"
+  }
+}
