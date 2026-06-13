@@ -1,0 +1,19 @@
+// Vertxing — Real-Time Video Meeting Platform
+// ─────────────────────────────────────────────────────────────────────────────
+// File:    apps/api/tsconfig.json
+// Layer:   Build / Tooling
+// Purpose: TypeScript config for the NestJS API. Inherits CommonJS + decorator
+//          settings from the repo base. The @vertxing/shared package is resolved
+//          via its built artifact through the workspace symlink, so it must be
+//          built before the API (the root `build` script enforces that order).
+// ─────────────────────────────────────────────────────────────────────────────
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "baseUrl": "./"
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist", "test"]
+}

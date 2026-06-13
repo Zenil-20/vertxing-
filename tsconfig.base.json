@@ -1,0 +1,32 @@
+// Vertxing — Real-Time Video Meeting Platform
+// ─────────────────────────────────────────────────────────────────────────────
+// File:    tsconfig.base.json
+// Layer:   Build / Tooling
+// Purpose: Shared TypeScript compiler defaults inherited by the API and shared
+//          packages. CommonJS is chosen deliberately: NestJS relies on
+//          reflect-metadata + decorators which are most stable under CJS, and
+//          Next.js transpiles the shared package regardless of its module kind.
+// ─────────────────────────────────────────────────────────────────────────────
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "lib": ["ES2022"],
+    "declaration": true,
+    "sourceMap": true,
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": false,
+    "noFallthroughCasesInSwitch": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
+  },
+  "exclude": ["node_modules", "dist"]
+}

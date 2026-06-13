@@ -1,0 +1,28 @@
+{
+  "name": "vertxing",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Vertxing — a scalable real-time video meeting platform (Zoom-class).",
+  "author": "Zenil Kapadia",
+  "license": "UNLICENSED",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "build:shared": "npm run build --workspace @vertxing/shared",
+    "build:api": "npm run build --workspace @vertxing/api",
+    "build:web": "npm run build --workspace @vertxing/web",
+    "build": "npm run build:shared && npm run build:api && npm run build:web",
+    "dev:api": "npm run start:dev --workspace @vertxing/api",
+    "dev:web": "npm run dev --workspace @vertxing/web",
+    "prisma:generate": "npm run prisma:generate --workspace @vertxing/api",
+    "prisma:migrate": "npm run prisma:migrate --workspace @vertxing/api",
+    "prisma:studio": "npm run prisma:studio --workspace @vertxing/api",
+    "infra:up": "docker compose up -d",
+    "infra:down": "docker compose down"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

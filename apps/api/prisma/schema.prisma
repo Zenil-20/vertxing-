@@ -1,0 +1,187 @@
+// Vertxing — Real-Time Video Meeting Platform
+// ─────────────────────────────────────────────────────────────────────────────
+// File:    apps/api/prisma/schema.prisma
+// Layer:   Infrastructure / Persistence (system of record)
+// Purpose: The durable relational model. PostgreSQL holds everything that must
+//          be consistent and survive restarts — identities, meetings, and the
+//          participant ledger. Ephemeral state (presence, "who is in the room
+//          right now") lives in Redis, NOT here. Media streams live in the SFU.
+//
+//          Enum string values are kept in lock-step with packages/shared so the
+//          same names cross the wire without translation.
+// ─────────────────────────────────────────────────────────────────────────────
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// Platform-level authorization role (distinct from per-meeting role).
+enum UserRole {
+  USER
+  ADMIN
+  SUPER_ADMIN
+}
+
+/// License tiers (usage/pricing). Seats = max user accounts on this tier.
+enum LicensePlan {
+  STARTER
+  TEAM
+  BUSINESS
+}
+
+enum LicenseStatus {
+  ACTIVE
+  REVOKED
+  EXPIRED
+}
+
+/// A provisioned license. The most recent ACTIVE row governs capacity; the
+/// super-admin activates one by entering a signed license key in the UI.
+model License {
+  id            String        @id @default(uuid())
+  key           String        @unique
+  plan          LicensePlan
+  seats         Int
+  status        LicenseStatus @default(ACTIVE)
+  activatedById String?
+  activatedAt   DateTime      @default(now())
+  expiresAt     DateTime?
+
+  @@index([status])
+  @@map("licenses")
+}
+
+/// Lifecycle of a meeting.
+enum MeetingStatus {
+  SCHEDULED
+  LIVE
+  ENDED
+  CANCELLED
+}
+
+/// Per-meeting authorization role.
+enum ParticipantRole {
+  HOST
+  CO_HOST
+  GUEST
+}
+
+/// A dynamic, super-admin-defined role: a NAMED bundle of permissions plus a
+/// default landing page. These are ADDITIVE — the three built-in roles (USER,
+/// ADMIN, SUPER_ADMIN) live in the UserRole enum and are never stored here. A
+/// custom role overlays a user's permissions but always sits at USER tier, so it
+/// can never escalate to super-admin or hold `license.manage` (enforced in code).
+model Role {
+  id             String   @id @default(uuid())
+  /// Human-facing name, e.g. "Team Lead".
+  name           String
+  /// Stable slug derived from the name; unique across custom roles.
+  key            String   @unique
+  /// Permission strings (subset of the shared ASSIGNABLE_PERMISSIONS).
+  permissions    String[]
+  /// Where members of this role land after sign-in (a nav href they can see).
+  defaultLanding String   @default("/app")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  members User[]
+
+  @@map("roles")
+}
+
+/// A user account. `passwordHash` never leaves the persistence layer.
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  displayName  String
+  avatarUrl    String?
+  /// Built-in tier (hierarchy + lock-out protection + licensing). When a custom
+  /// role is assigned this stays USER — the custom role only overlays permissions.
+  role         UserRole @default(USER)
+  /// Optional dynamic role. Null ⇒ permissions come from the built-in `role`.
+  /// SetNull on delete ⇒ removing a role reverts its members to the base role.
+  customRoleId String?
+  customRole   Role?    @relation(fields: [customRoleId], references: [id], onDelete: SetNull)
+  /// When true, the user is unavailable for direct calls (privacy v1).
+  doNotDisturb Boolean  @default(false)
+  /// Per-user "may START direct calls" lever. New accounts are LOCKED by default
+  /// (false) — a manager grants it. Effective call rights for ADMIN/SUPER_ADMIN
+  /// come from their role regardless of this flag (see ROLE_PERMISSIONS).
+  callsEnabled Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  hostedMeetings    Meeting[]          @relation("MeetingHost")
+  participations    Participant[]
+  pushSubscriptions PushSubscription[]
+
+  @@index([customRoleId])
+  @@map("users")
+}
+
+/// A browser's Web Push subscription — how we ring a user whose app is CLOSED.
+/// One row per device/browser; `endpoint` is the push service URL (unique). When
+/// a push returns 404/410 the subscription is stale and we delete it.
+model PushSubscription {
+  id        String   @id @default(uuid())
+  userId    String
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("push_subscriptions")
+}
+
+/// A schedulable, durable meeting. `roomName` is the stable, unguessable key
+/// shared with the SFU — the LiveKit room is created lazily on first join.
+model Meeting {
+  id               String        @id @default(uuid())
+  title              String
+  roomName           String        @unique
+  status             MeetingStatus @default(SCHEDULED)
+  hostId             String
+  waitingRoomEnabled Boolean       @default(false)
+  /// Live count, reconciled from LiveKit room webhooks (not guessed).
+  participantCount   Int           @default(0)
+  scheduledStartAt   DateTime?
+  startedAt        DateTime?
+  endedAt          DateTime?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  host         User          @relation("MeetingHost", fields: [hostId], references: [id], onDelete: Cascade)
+  participants Participant[]
+
+  @@index([hostId])
+  @@index([status])
+  @@map("meetings")
+}
+
+/// The participant ledger: an append-style record of who joined which meeting
+/// and in what role. `leftAt` is null while a participant is considered present
+/// per the durable record (live presence is still authoritative in Redis).
+model Participant {
+  id        String          @id @default(uuid())
+  meetingId String
+  userId    String
+  role      ParticipantRole @default(GUEST)
+  joinedAt  DateTime        @default(now())
+  leftAt    DateTime?
+
+  meeting Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([meetingId, userId])
+  @@index([meetingId])
+  @@map("participants")
+}

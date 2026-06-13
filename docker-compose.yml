@@ -1,0 +1,60 @@
+# Vertxing — Real-Time Video Meeting Platform
+# ─────────────────────────────────────────────────────────────────────────────
+# File:    docker-compose.yml
+# Layer:   Infrastructure (local development)
+# Purpose: Spin up the three backing services the platform depends on:
+#            1. PostgreSQL — primary relational datastore (users, meetings...)
+#            2. Redis      — presence, sessions, pub/sub fan-out across nodes
+#            3. LiveKit    — the SFU / media engine that carries audio + video
+#          Run with:  npm run infra:up   (docker compose up -d)
+# ─────────────────────────────────────────────────────────────────────────────
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: vertxing-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: vertxing
+      POSTGRES_PASSWORD: vertxing
+      POSTGRES_DB: vertxing
+    ports:
+      - "5432:5432"
+    volumes:
+      - vertxing-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vertxing"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: vertxing-redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - vertxing-redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  livekit:
+    image: livekit/livekit-server:latest
+    container_name: vertxing-livekit
+    restart: unless-stopped
+    # Dev-only inline config. Keys MUST match LIVEKIT_API_KEY/SECRET in .env.
+    command: --dev --bind 0.0.0.0
+    environment:
+      LIVEKIT_KEYS: "devkey: devsecret-please-change-me-32chars"
+    ports:
+      - "7880:7880"      # signaling (WebSocket)
+      - "7881:7881"      # RTC/TCP
+      - "7882:7882/udp"  # RTC/UDP
+
+volumes:
+  vertxing-postgres-data:
+  vertxing-redis-data:

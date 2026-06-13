@@ -1,0 +1,57 @@
+# Vertxing — Real-Time Video Meeting Platform
+# ─────────────────────────────────────────────────────────────────────────────
+# File:    render.yaml  (Render Blueprint)
+# Layer:   Deployment (API host)
+# Purpose: One-click deploy of the API to Render's FREE tier as a Docker web
+#          service (Socket.IO/WebSocket supported). Render injects PORT and gives
+#          HTTPS automatically. Secrets marked `sync: false` are entered in the
+#          Render dashboard; JWT/LICENSE secrets are auto-generated.
+#
+#          NOTE: the free plan SLEEPS after ~15 min idle (first request after
+#          idle is slow). For always-on free, run the Docker image on an Oracle
+#          Cloud "Always Free" VM instead — see DEPLOYMENT.md.
+# ─────────────────────────────────────────────────────────────────────────────
+services:
+  - type: web
+    name: vertxing-api
+    runtime: docker
+    repo: # set to your GitHub repo URL after you push, or deploy via the dashboard
+    plan: free
+    region: oregon # pick the region closest to your users
+    dockerfilePath: ./apps/api/Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # ── Secrets / connection strings (enter in the Render dashboard) ──
+      - key: DATABASE_URL # Neon Postgres connection string (use the POOLED url)
+        sync: false
+      - key: REDIS_URL # Upstash Redis URL (rediss://… with TLS)
+        sync: false
+      - key: CORS_ORIGINS # your Vercel web URL, e.g. https://vertxing.vercel.app
+        sync: false
+      # ── LiveKit Cloud (media) ──
+      - key: LIVEKIT_URL # wss://<your-project>.livekit.cloud
+        sync: false
+      - key: LIVEKIT_API_KEY
+        sync: false
+      - key: LIVEKIT_API_SECRET
+        sync: false
+      # ── Web Push (background calls) ──
+      - key: VAPID_PUBLIC_KEY
+        sync: false
+      - key: VAPID_PRIVATE_KEY
+        sync: false
+      - key: VAPID_SUBJECT
+        value: mailto:admin@vertxing.app
+      # ── Auto-generated app secrets ──
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: LICENSE_SECRET
+        generateValue: true
+      # Optional: the email that becomes SUPER_ADMIN on registration.
+      - key: SUPER_ADMIN_EMAIL
+        sync: false

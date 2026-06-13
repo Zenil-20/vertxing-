@@ -1,0 +1,38 @@
+# Vertxing — Real-Time Video Meeting Platform
+# ─────────────────────────────────────────────────────────────────────────────
+# File:    .github/workflows/ci.yml
+# Layer:   CI
+# Purpose: The quality gate. On every push/PR: install, build the shared
+#          contracts, generate the Prisma client, typecheck + build both apps,
+#          and run unit tests. "Green" is the bar for merging — not "it builds on
+#          my machine". (Integration/e2e + the smoke suites run in a later job
+#          once service containers are wired.)
+# ─────────────────────────────────────────────────────────────────────────────
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    env:
+      # generate/build don't connect to a DB; a placeholder satisfies env() in
+      # the Prisma schema.
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/ci?schema=public
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - run: npm run build:shared
+      - run: npm run prisma:generate
+      - run: npm run typecheck --workspace @vertxing/api
+      - run: npm run typecheck --workspace @vertxing/web
+      - run: npm run build:api
+      - run: npm run build:web
+      - run: npm run test --workspace @vertxing/api

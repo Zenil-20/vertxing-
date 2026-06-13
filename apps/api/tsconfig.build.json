@@ -1,0 +1,11 @@
+// Vertxing — Real-Time Video Meeting Platform
+// ─────────────────────────────────────────────────────────────────────────────
+// File:    apps/api/tsconfig.build.json
+// Layer:   Build / Tooling
+// Purpose: Production build variant used by `nest build` — same as tsconfig.json
+//          but excludes tests and spec files from the emitted output.
+// ─────────────────────────────────────────────────────────────────────────────
+{
+  "extends": "./tsconfig.json",
+  "exclude": ["node_modules", "dist", "test", "**/*.spec.ts"]
+}

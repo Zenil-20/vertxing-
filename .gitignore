@@ -1,0 +1,43 @@
+# Vertxing — Real-Time Video Meeting Platform
+# ─────────────────────────────────────────────────────────────────────────────
+# File:    .gitignore
+# Purpose: Keep build artifacts, secrets, and dependencies out of version control.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Dependencies
+node_modules/
+.pnp/
+.pnp.js
+
+# Build output
+dist/
+build/
+.next/
+out/
+*.tsbuildinfo
+
+# Environment & secrets (the *.example templates stay tracked)
+.env
+.env.local
+.env.*.local
+.env.production
+**/.env.production
+
+# Prisma generated client
+apps/api/src/infrastructure/prisma/generated/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Test / coverage
+coverage/
+.nyc_output/

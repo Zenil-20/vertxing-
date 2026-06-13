@@ -1,0 +1,21 @@
+# Keep the API image build context small and secret-free.
+**/node_modules
+**/dist
+**/.next
+**/.turbo
+.git
+.github
+.claude
+**/*.log
+
+# Never bake env/secrets into an image — config comes from the host's env vars.
+.env
+*.env
+**/.env
+**/*.env
+!**/*.env.example
+
+# The API image doesn't need the web app's source.
+apps/web/app
+apps/web/components
+apps/web/public

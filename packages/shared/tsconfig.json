@@ -1,0 +1,16 @@
+// Vertxing — Real-Time Video Meeting Platform
+// ─────────────────────────────────────────────────────────────────────────────
+// File:    packages/shared/tsconfig.json
+// Layer:   Build / Tooling
+// Purpose: Compile the shared contracts package to ESM + type declarations so
+//          both the API and the web app consume one typed source of truth.
+// ─────────────────────────────────────────────────────────────────────────────
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "ignoreDeprecations": "5.0"
+  },
+  "include": ["src/**/*.ts"]
+}
