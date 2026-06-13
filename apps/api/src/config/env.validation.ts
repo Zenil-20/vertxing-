@@ -103,6 +103,11 @@ class EnvironmentVariables {
   @IsOptional()
   @IsString()
   VAPID_SUBJECT?: string;
+
+  /** Base64 of the Firebase service-account JSON — FCM sender for native calls. */
+  @IsOptional()
+  @IsString()
+  FCM_SERVICE_ACCOUNT_BASE64?: string;
 }
 
 /**

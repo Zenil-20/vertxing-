@@ -94,6 +94,17 @@ export class UsersService {
     return this.permissionsOf(user).includes(Permission.CallsStart);
   }
 
+  /** Store the native device's FCM token (for full-screen calls). */
+  async setFcmToken(userId: string, token: string): Promise<void> {
+    await this.users.update(userId, { fcmToken: token });
+  }
+
+  /** The user's latest native FCM token, or null. */
+  async getFcmToken(userId: string): Promise<string | null> {
+    const user = await this.users.findById(userId);
+    return user?.fcmToken ?? null;
+  }
+
   // ── Privileged user management (Permission.UsersManage) ─────────────────────
 
   /** Every account with its role + dynamic role + call lever. */

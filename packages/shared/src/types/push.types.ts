@@ -29,6 +29,11 @@ export interface RemovePushSubscriptionRequest {
   endpoint: string;
 }
 
+/** Body for POST /push/fcm-token — the native Android device's FCM token. */
+export interface SaveFcmTokenRequest {
+  token: string;
+}
+
 /** The payload the Service Worker receives for an incoming call. */
 export interface IncomingCallPushData {
   type: 'incoming-call';

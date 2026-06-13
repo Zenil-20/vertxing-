@@ -41,6 +41,7 @@ import { MeetingsService } from '../meetings/meetings.service';
 import { WaitingRoomService } from '../meetings/waiting-room.service';
 import { UsersService } from '../users/users.service';
 import { PushService } from '../push/push.service';
+import { FcmService } from '../push/fcm.service';
 import { CallService } from './call.service';
 
 interface SocketUser {
@@ -74,7 +75,21 @@ export class EventsGateway
     private readonly users: UsersService,
     private readonly calls: CallService,
     private readonly push: PushService,
+    private readonly fcm: FcmService,
   ) {}
+
+  /** Ring a callee's NATIVE app (full-screen) via FCM, if they have a device. */
+  private async ringNative(
+    calleeId: string,
+    callId: string,
+    from: { id: string; name: string },
+    mode: 'AUDIO' | 'VIDEO',
+  ): Promise<void> {
+    const token = await this.users.getFcmToken(calleeId);
+    if (token) {
+      await this.fcm.sendCall(token, { type: 'incoming-call', callId, from, mode });
+    }
+  }
 
   /**
    * Authenticate during the Socket.IO HANDSHAKE via middleware. Middleware
@@ -250,6 +265,12 @@ export class EventsGateway
       from: { id: user.userId, name: user.name },
       mode: payload.mode,
     });
+    await this.ringNative(
+      payload.calleeId,
+      result.callId,
+      { id: user.userId, name: user.name },
+      payload.mode,
+    );
 
     this.scheduleRingTimeout(result.callId);
   }
@@ -329,6 +350,12 @@ export class EventsGateway
       from: { id: user.userId, name: user.name },
       mode: 'AUDIO',
     });
+    await this.ringNative(
+      payload.calleeId,
+      result.callId,
+      { id: user.userId, name: user.name },
+      'AUDIO',
+    );
     this.scheduleRingTimeout(result.callId);
   }
 

@@ -39,6 +39,8 @@ export interface AppConfig {
     vapidPublicKey: string | null;
     vapidPrivateKey: string | null;
     vapidSubject: string;
+    /** Base64 of the Firebase service-account JSON (FCM sender). Null ⇒ FCM off. */
+    fcmServiceAccountBase64: string | null;
   };
 }
 
@@ -77,5 +79,6 @@ export default (): AppConfig => ({
     vapidPublicKey: process.env.VAPID_PUBLIC_KEY || null,
     vapidPrivateKey: process.env.VAPID_PRIVATE_KEY || null,
     vapidSubject: process.env.VAPID_SUBJECT || 'mailto:admin@vertxing.dev',
+    fcmServiceAccountBase64: process.env.FCM_SERVICE_ACCOUNT_BASE64 || null,
   },
 });

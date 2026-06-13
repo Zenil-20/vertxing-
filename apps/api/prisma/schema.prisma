@@ -114,6 +114,9 @@ model User {
   /// (false) — a manager grants it. Effective call rights for ADMIN/SUPER_ADMIN
   /// come from their role regardless of this flag (see ROLE_PERMISSIONS).
   callsEnabled Boolean  @default(false)
+  /// The user's latest Android (FCM) device token — used to ring the NATIVE app
+  /// with a full-screen, screen-waking incoming call. Null ⇒ no native device.
+  fcmToken     String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
