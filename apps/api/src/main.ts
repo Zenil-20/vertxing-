@@ -27,7 +27,22 @@ async function bootstrap(): Promise<void> {
   const corsOrigins = config.getOrThrow<string[]>('corsOrigins');
 
   app.setGlobalPrefix('api');
-  app.enableCors({ origin: corsOrigins, credentials: true });
+  // Allow: requests with no Origin (curl / same-origin / native webview), any
+  // explicitly-configured origin, and ANY Vercel deployment of this app — so the
+  // web works even before CORS_ORIGINS is pinned to the exact production domain.
+  app.enableCors({
+    origin: (origin: string | undefined, cb: (err: Error | null, allow?: boolean) => void): void => {
+      if (!origin) return cb(null, true);
+      let host = '';
+      try {
+        host = new URL(origin).hostname;
+      } catch {
+        /* malformed origin → falls through to the allow-list check */
+      }
+      cb(null, corsOrigins.includes(origin) || host.endsWith('.vercel.app'));
+    },
+    credentials: true,
+  });
   app.enableShutdownHooks();
 
   // Bind 0.0.0.0 so the process is reachable inside a container / on a VM, not

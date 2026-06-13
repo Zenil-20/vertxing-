@@ -22,6 +22,9 @@ out/
 .env.*.local
 .env.production
 **/.env.production
+# Exception: the web's prod env holds only the PUBLIC API URL (no secret), and
+# Vercel needs it at build time — so track this one.
+!apps/web/.env.production
 
 # Prisma generated client
 apps/api/src/infrastructure/prisma/generated/
