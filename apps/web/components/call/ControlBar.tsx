@@ -26,6 +26,7 @@ import {
   VideoOff,
 } from 'lucide-react';
 import { useState } from 'react';
+import { useIsNativeApp } from '@/lib/platform';
 
 export type CallPanel = 'none' | 'people' | 'invite' | 'chat';
 
@@ -53,6 +54,8 @@ export function ControlBar({
   const { localParticipant, isMicrophoneEnabled, isCameraEnabled, isScreenShareEnabled } =
     useLocalParticipant();
   const [emojiOpen, setEmojiOpen] = useState(false);
+  // Screen share isn't available in the Android WebView — hide it in the native app.
+  const isNative = useIsNativeApp();
 
   const togglePanel = (next: CallPanel) => onPanel(panel === next ? 'none' : next);
 
@@ -77,13 +80,15 @@ export function ControlBar({
         {isCameraEnabled ? <Video size={20} /> : <VideoOff size={20} />}
       </button>
 
-      <button
-        className={`ctrl ${isScreenShareEnabled ? 'active' : ''}`}
-        title={isScreenShareEnabled ? 'Stop sharing' : 'Share screen'}
-        onClick={() => localParticipant.setScreenShareEnabled(!isScreenShareEnabled)}
-      >
-        <MonitorUp size={20} />
-      </button>
+      {!isNative && (
+        <button
+          className={`ctrl ${isScreenShareEnabled ? 'active' : ''}`}
+          title={isScreenShareEnabled ? 'Stop sharing' : 'Share screen'}
+          onClick={() => localParticipant.setScreenShareEnabled(!isScreenShareEnabled)}
+        >
+          <MonitorUp size={20} />
+        </button>
+      )}
 
       {/* Reactions with emoji popover */}
       <div style={{ position: 'relative' }}>

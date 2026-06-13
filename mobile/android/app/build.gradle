@@ -16,7 +16,21 @@ android {
             ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    // Fixed debug signing key so every CI build is signed identically — new APKs
+    // install right over the old one (no uninstall needed). This is a dev key,
+    // not a Play Store release key.
+    signingConfigs {
+        debug {
+            storeFile file('vertxing-debug.keystore')
+            storePassword 'vertxing'
+            keyAlias 'vertxing'
+            keyPassword 'vertxing'
+        }
+    }
     buildTypes {
+        debug {
+            signingConfig signingConfigs.debug
+        }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'

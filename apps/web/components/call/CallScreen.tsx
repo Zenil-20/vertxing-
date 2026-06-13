@@ -29,6 +29,7 @@ import {
 import { useEffect, useState } from 'react';
 import type { CallMode, DirectoryUser } from '@vertxing/shared';
 import { api } from '@/lib/api-client';
+import { useIsNativeApp } from '@/lib/platform';
 import { VideoGrid } from './VideoGrid';
 
 interface CallScreenProps {
@@ -97,6 +98,8 @@ export function CallScreen({ peer, mode, url, token, onHangup, onAddPerson }: Ca
 function CallControls({ onAddClick, onHangup }: { onAddClick: () => void; onHangup: () => void }) {
   const { localParticipant, isMicrophoneEnabled, isCameraEnabled, isScreenShareEnabled } =
     useLocalParticipant();
+  // Screen share (getDisplayMedia) isn't supported in the Android WebView — hide it there.
+  const isNative = useIsNativeApp();
 
   return (
     <div
@@ -119,13 +122,15 @@ function CallControls({ onAddClick, onHangup }: { onAddClick: () => void; onHang
         {isCameraEnabled ? <Video size={20} /> : <VideoOff size={20} />}
       </button>
 
-      <button
-        className={`ctrl ${isScreenShareEnabled ? 'active' : ''}`}
-        title={isScreenShareEnabled ? 'Stop sharing' : 'Share screen'}
-        onClick={() => localParticipant.setScreenShareEnabled(!isScreenShareEnabled)}
-      >
-        <MonitorUp size={20} />
-      </button>
+      {!isNative && (
+        <button
+          className={`ctrl ${isScreenShareEnabled ? 'active' : ''}`}
+          title={isScreenShareEnabled ? 'Stop sharing' : 'Share screen'}
+          onClick={() => localParticipant.setScreenShareEnabled(!isScreenShareEnabled)}
+        >
+          <MonitorUp size={20} />
+        </button>
+      )}
 
       <SpeakerControl />
 
