@@ -34,6 +34,7 @@ import type {
   PushPublicKeyDto,
   RegisterRequest,
   RemovePushSubscriptionRequest,
+  SaveFcmTokenRequest,
   SavePushSubscriptionRequest,
   UpdateMeetingRequest,
   UpdateProfileRequest,
@@ -178,6 +179,9 @@ export const api = {
 
   unsubscribePush: (payload: RemovePushSubscriptionRequest): Promise<void> =>
     request('/push/unsubscribe', { method: 'POST', body: payload }),
+
+  registerFcmToken: (payload: SaveFcmTokenRequest): Promise<void> =>
+    request('/push/fcm-token', { method: 'POST', body: payload }),
 
   createMeeting: (payload: CreateMeetingRequest): Promise<Meeting> =>
     request('/meetings', { method: 'POST', body: payload }),

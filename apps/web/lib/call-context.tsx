@@ -39,6 +39,7 @@ import { IncomingCallModal } from '@/components/call/IncomingCallModal';
 import { OutgoingCallOverlay } from '@/components/call/OutgoingCallOverlay';
 import { CallScreen } from '@/components/call/CallScreen';
 import { useAuth } from './auth-context';
+import { registerNativeFcm } from './native-fcm';
 import { createSocket } from './realtime';
 import { getRingSeconds, ringtone } from './ringtone';
 import { session } from './session';
@@ -121,6 +122,10 @@ export function CallProvider({ children }: { children: ReactNode }) {
 
     const socket = createSocket(token);
     socketRef.current = socket;
+
+    // On the native Android app, register this device's FCM token so the server
+    // can ring it with a full-screen call. No-op in a browser.
+    void registerNativeFcm();
 
     socket.on(CallEvents.Incoming, (p: IncomingCallPayload) => {
       // Busy? Auto-decline so the caller gets a clean "ended".
